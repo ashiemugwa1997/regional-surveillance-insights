@@ -94,14 +94,17 @@ but contains a number of value-level problems:
 | Issue | Where | Handling |
 |-------|-------|----------|
 | Missing values | funding (6–7%), population under-5/urban (8%) | Kept as **NULL** — shown as "—", never imputed. |
-| `case_fatality_ratio_pct` > 100 | 14 surveillance rows | **Flagged** `is_valid=False`, excluded from indicators. |
-| `deaths_reported` > `cases_reported` | 7 surveillance rows | **Flagged**, excluded from indicators. |
+| `deaths_reported` > `cases_reported` / `case_fatality_ratio_pct` > 100% | 14 surveillance rows | **Flagged as case under-ascertainment**, kept and counted; CFR capped at 100% when averaging. |
 | Noisy under-5 population | population | Not used in scoring; reported only. |
 
-The policy is **flag and quarantine, never fabricate**: every row is loaded so nothing
-is lost, but rows that fail validation are marked and kept out of the indicators. This
-is the safest default for a public-health audience. Run `python etl/profile_data.py` to
-regenerate `docs/data_quality_report.md`.
+The policy is **flag, never fabricate or drop**. Missing values stay NULL rather than
+being imputed. Rows where deaths exceed recorded cases (and the resulting CFR > 100%)
+are **not** treated as errors — in surveillance this usually reflects *case
+under-ascertainment* (a death recorded without the case being registered), so the rows
+are kept and counted; CFR is simply capped at 100% so an out-of-range ratio can't
+distort the average. Every flagged row is listed, with its reason, on the in-app
+**Data Quality** page. Run `python etl/profile_data.py` to regenerate
+`docs/data_quality_report.md`.
 
 ## Methodology — Support-Need Index (SNI)
 
@@ -113,7 +116,7 @@ indicators across five domains:
 | Workforce | 0.25 | epidemiologists/100k, FETP-trained %, lab techs/100k |
 | Reporting | 0.20 | timeliness %, completeness %, IDSR weekly compliance % |
 | Laboratory | 0.20 | ISO 15189 accreditation %, turnaround days, tests/100k |
-| Outbreaks | 0.20 | time-to-detection, outbreaks/year, mean CFR (valid rows) |
+| Outbreaks | 0.20 | time-to-detection, outbreaks/year, mean CFR (capped at 100%) |
 | Funding | 0.15 | funding per capita, domestic funding share % |
 
 Steps:
