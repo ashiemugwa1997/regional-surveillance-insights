@@ -1,8 +1,8 @@
 # Support-Need Index (SNI): ~14 indicators across 5 domains, min-max normalised so
 # higher always means greater need, averaged per domain then weighted into a 0-100
-# score. All surveillance rows feed it (CFR capped at 100% so under-ascertainment rows
-# count without distorting the average); missing values are skipped, not imputed.
-# Methodology written up in full in the README.
+# score. CFR uses the median (robust to under-ascertainment outliers, no value change),
+# and the under-ascertainment rate is itself an indicator so the flag affects the final
+# score; missing values are skipped, not imputed. Methodology written up in the README.
 
 from __future__ import annotations
 
@@ -24,6 +24,7 @@ INDICATORS = [
     ("Reporting", "timeliness_pct", "invert"),
     ("Reporting", "completeness_pct", "invert"),
     ("Reporting", "idsr_weekly_compliance_pct", "invert"),
+    ("Reporting", "under_ascertainment_rate", "direct"),
     ("Laboratory", "iso15189_accreditation_pct", "invert"),
     ("Laboratory", "avg_turnaround_time_days", "direct"),
     ("Laboratory", "diagnostic_tests_per_100k", "invert"),
@@ -32,7 +33,7 @@ INDICATORS = [
     ("Workforce", "lab_technicians_per_100k", "invert"),
     ("Outbreaks", "avg_detection_days", "direct"),
     ("Outbreaks", "outbreaks_per_year", "direct"),
-    ("Outbreaks", "mean_cfr", "direct"),
+    ("Outbreaks", "median_cfr", "direct"),
     ("Funding", "funding_per_capita_usd", "invert"),
     ("Funding", "domestic_funding_share_pct", "invert"),
 ]
@@ -87,18 +88,28 @@ def build_indicator_frame() -> pd.DataFrame:
     else:
         ob_agg = pd.DataFrame(columns=["avg_detection_days", "outbreaks_per_year"])
 
-    # Mean case-fatality ratio over the recent window. All rows are included;
-    # CFR is capped at 100% so under-ascertainment rows (deaths>cases) count
-    # without pushing the average above a possible value.
+    # Median case-fatality ratio over the recent window — robust to the few
+    # under-ascertainment outliers (CFR>100%) with no value modification.
     dis = _df(models.DiseaseSurveillance.objects.filter(year__in=RECENT_WINDOW),
               ["country_id", "case_fatality_ratio_pct"])
     if not dis.empty:
-        dis["cfr_capped"] = dis["case_fatality_ratio_pct"].clip(upper=100)
-        dis_agg = dis.groupby("country_id").agg(mean_cfr=("cfr_capped", "mean"))
+        dis_agg = dis.groupby("country_id").agg(
+            median_cfr=("case_fatality_ratio_pct", "median"))
     else:
-        dis_agg = pd.DataFrame(columns=["mean_cfr"])
+        dis_agg = pd.DataFrame(columns=["median_cfr"])
 
-    frame = base.join([rep, lab, wf, fund, pop, ob_agg, dis_agg])
+    # Under-ascertainment rate — share of a country's surveillance records flagged
+    # (deaths>cases / CFR>100%). A higher rate signals weaker case-finding, so the
+    # flag feeds the index as additional need rather than being only informational.
+    ua = _df(models.DiseaseSurveillance.objects.all(),
+             ["country_id", "under_ascertainment"])
+    if not ua.empty:
+        ua_agg = ua.groupby("country_id").agg(
+            under_ascertainment_rate=("under_ascertainment", "mean"))
+    else:
+        ua_agg = pd.DataFrame(columns=["under_ascertainment_rate"])
+
+    frame = base.join([rep, lab, wf, fund, pop, ob_agg, dis_agg, ua_agg])
     return frame
 
 
