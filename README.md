@@ -101,10 +101,12 @@ The policy is **flag, never fabricate or drop**. Missing values stay NULL rather
 being imputed. Rows where deaths exceed recorded cases (and the resulting CFR > 100%)
 are **not** treated as errors — in surveillance this usually reflects *case
 under-ascertainment* (a death recorded without the case being registered), so the rows
-are kept and counted; CFR is simply capped at 100% so an out-of-range ratio can't
-distort the average. Every flagged row is listed, with its reason, on the in-app
-**Data Quality** page. Run `python etl/profile_data.py` to regenerate
-`docs/data_quality_report.md`.
+are kept and counted. The CFR indicator uses the **median** (robust to the few >100%
+outliers, with no value modification). Crucially, under-ascertainment is **not just a
+note**: the share of a country's flagged records is itself an indicator in the index
+(weaker case-finding → higher need), so the flag affects the final assessment. Every
+flagged row is listed, with its reason, on the in-app **Data Quality** page. Run
+`python etl/profile_data.py` to regenerate `docs/data_quality_report.md`.
 
 ## Methodology — Support-Need Index (SNI)
 
@@ -114,9 +116,9 @@ indicators across five domains:
 | Domain | Weight | Indicators (oriented so higher = greater need) |
 |--------|--------|------------------------------------------------|
 | Workforce | 0.25 | epidemiologists/100k, FETP-trained %, lab techs/100k |
-| Reporting | 0.20 | timeliness %, completeness %, IDSR weekly compliance % |
+| Reporting | 0.20 | timeliness %, completeness %, IDSR weekly compliance %, under-ascertainment rate |
 | Laboratory | 0.20 | ISO 15189 accreditation %, turnaround days, tests/100k |
-| Outbreaks | 0.20 | time-to-detection, outbreaks/year, mean CFR (capped at 100%) |
+| Outbreaks | 0.20 | time-to-detection, outbreaks/year, median CFR |
 | Funding | 0.15 | funding per capita, domestic funding share % |
 
 Steps:
@@ -145,8 +147,8 @@ once more history is available.
 Derived from the weakest regional domains and the high-need cohort:
 
 1. **Scale up the surveillance workforce (FETP)** — region averages **0.26
-   epidemiologists/100k**, far below the IHR target of 1.0. Prioritise Niger,
-   DR Congo, CAR, Chad, Mali.
+   epidemiologists/100k**, far below the IHR target of 1.0. Prioritise the high-need
+   cohort (Mali, DR Congo, CAR, Mozambique, Burkina Faso).
 2. **Strengthen laboratory accreditation and turnaround** — only **~29%** of public
    labs are ISO 15189 accredited; average turnaround ~5.8 days.
 3. **Improve reporting and reduce external-funding dependency** — timeliness ~75%
