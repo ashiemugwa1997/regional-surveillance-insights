@@ -26,8 +26,8 @@
 </form>
 
 <div class="controls">
-  <a href="{% url 'surveillance:export_data' 'csv' %}?year={{ sel_year }}&country={{ sel_country }}">⬇ CSV</a>
-  <a href="{% url 'surveillance:export_data' 'xlsx' %}?year={{ sel_year }}&country={{ sel_country }}">⬇ Excel</a>
+  <a class="btn" href="{% url 'surveillance:export_data' 'csv' %}?year={{ sel_year }}&country={{ sel_country }}">⬇ Download CSV</a>
+  <a class="btn secondary" href="{% url 'surveillance:export_data' 'xlsx' %}?year={{ sel_year }}&country={{ sel_country }}">⬇ Download Excel</a>
   <span class="muted">(respects the filters above)</span>
 </div>
 
