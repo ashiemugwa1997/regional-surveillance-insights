@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %}Map{% endblock %}
 {% block head %}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="{% static 'surveillance/vendor/leaflet.css' %}" />
 <style>
   #map { height: 72vh; border-radius: 10px; background: #eaf2f8; }
   .legend { background:#fff; padding:8px 10px; border-radius:8px; font-size:12px;
@@ -17,7 +17,7 @@
 <div class="panel"><div id="map"></div></div>
 {% endblock %}
 {% block scripts %}
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'surveillance/vendor/leaflet.js' %}"></script>
 <script>
   const data = {{ points|safe }};
   const byIso = {};

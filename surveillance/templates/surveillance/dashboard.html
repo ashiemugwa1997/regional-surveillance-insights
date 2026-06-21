@@ -1,5 +1,6 @@
 {% extends "surveillance/base.html" %}
 {% load humanize %}
+{% load static %}
 {% block content %}
 <h2>Regional summary — 2025</h2>
 
@@ -36,7 +37,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{% static 'surveillance/vendor/chart.umd.min.js' %}"></script>
 <script>
   const D = {{ charts|safe }};
   const blue = '#1e88e5', navy = '#0a3d62', green = '#2f9e69', amber = '#e8a33d';
