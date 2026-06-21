@@ -148,7 +148,8 @@ Derived from the weakest regional domains and the high-need cohort:
 
 1. **Scale up the surveillance workforce (FETP)** — region averages **0.26
    epidemiologists/100k**, far below the IHR target of 1.0. Prioritise the high-need
-   cohort (Mali, DR Congo, CAR, Mozambique, Burkina Faso).
+   tier identified by the index (the current ranking is shown live on the **Support**
+   page — it is computed, not hard-coded).
 2. **Strengthen laboratory accreditation and turnaround** — only **~29%** of public
    labs are ISO 15189 accredited; average turnaround ~5.8 days.
 3. **Improve reporting and reduce external-funding dependency** — timeliness ~75%
