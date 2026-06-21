@@ -1,0 +1,47 @@
+{% extends "surveillance/base.html" %}
+{% block title %}Map{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>#map { height: 70vh; border-radius: 10px; } .legend { background:#fff; padding:8px 10px;
+  border-radius:8px; font-size:12px; box-shadow:0 1px 3px rgba(0,0,0,.2); line-height:1.6; }
+  .legend i { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:6px; }</style>
+{% endblock %}
+{% block content %}
+<h2>Support-Need map</h2>
+<p class="muted">Each country is plotted by its coordinates and coloured by support-need tier.
+  Click a marker for its Support-Need Index and rank.</p>
+<div class="panel"><div id="map"></div></div>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const points = {{ points|safe }};
+  const colour = t => t === 'High need' ? '#d64545' : t === 'Medium need' ? '#e8a33d' : '#2f9e69';
+
+  const map = L.map('map').setView([2, 18], 3);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap', maxZoom: 7
+  }).addTo(map);
+
+  points.forEach(p => {
+    L.circleMarker([p.lat, p.lng], {
+      radius: 9, color: '#fff', weight: 1.5, fillColor: colour(p.tier), fillOpacity: 0.9
+    }).addTo(map).bindPopup(
+      `<strong>${p.name}</strong> (${p.iso3})<br>` +
+      `SNI: <strong>${p.sni}</strong> · rank #${p.rank}<br>` +
+      `Tier: ${p.tier}<br>` +
+      `<a href="/country/${p.iso3}/">View country &rarr;</a>`
+    );
+  });
+
+  const legend = L.control({ position: 'bottomright' });
+  legend.onAdd = () => {
+    const d = L.DomUtil.create('div', 'legend');
+    d.innerHTML = '<i style="background:#d64545"></i>High need<br>' +
+                  '<i style="background:#e8a33d"></i>Medium need<br>' +
+                  '<i style="background:#2f9e69"></i>Low need';
+    return d;
+  };
+  legend.addTo(map);
+</script>
+{% endblock %}

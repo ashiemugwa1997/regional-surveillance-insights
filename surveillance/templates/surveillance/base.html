@@ -61,8 +61,11 @@
     </div>
     <nav>
       <a href="{% url 'surveillance:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
-      <a href="{% url 'surveillance:support' %}" class="{% if request.resolver_match.url_name == 'support' %}active{% endif %}">Countries Needing Support</a>
+      <a href="{% url 'surveillance:map' %}" class="{% if request.resolver_match.url_name == 'map' %}active{% endif %}">Map</a>
+      <a href="{% url 'surveillance:support' %}" class="{% if request.resolver_match.url_name == 'support' %}active{% endif %}">Support</a>
       <a href="{% url 'surveillance:data_table' %}" class="{% if request.resolver_match.url_name == 'data_table' %}active{% endif %}">Data Table</a>
+      <a href="{% url 'surveillance:data_quality' %}" class="{% if request.resolver_match.url_name == 'data_quality' %}active{% endif %}">Data Quality</a>
+      <a href="{% url 'surveillance:upload' %}" class="{% if request.resolver_match.url_name == 'upload' %}active{% endif %}">Upload</a>
     </nav>
   </header>
   <main>

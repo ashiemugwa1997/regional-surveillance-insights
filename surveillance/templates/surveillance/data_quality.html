@@ -1,0 +1,43 @@
+{% extends "surveillance/base.html" %}
+{% block title %}Data Quality{% endblock %}
+{% block content %}
+<h2>Data quality</h2>
+<p class="muted">Policy: <strong>flag and quarantine, never fabricate</strong>. Invalid rows are
+  loaded but excluded from indicators; missing values are kept as NULL, not imputed.</p>
+
+<div class="cards" style="margin-bottom:20px">
+  <div class="card"><div class="label">Surveillance rows</div><div class="value">{{ total_rows }}</div></div>
+  <div class="card"><div class="label">Quarantined</div><div class="value">{{ flagged_count }}</div><div class="note">impossible / contradictory</div></div>
+  <div class="card"><div class="label">Columns with gaps</div><div class="value">{{ missing|length }}</div><div class="note">missing values kept NULL</div></div>
+</div>
+
+<div class="grid2">
+  <div class="panel">
+    <h3>Quarantined surveillance rows</h3>
+    <table>
+      <thead><tr><th>Country</th><th>Year</th><th>Disease</th><th class="num">Cases</th>
+        <th class="num">Deaths</th><th class="num">CFR %</th><th>Reason</th></tr></thead>
+      <tbody>
+        {% for r in flagged %}
+        <tr><td>{{ r.country.country_name }}</td><td>{{ r.year }}</td><td>{{ r.disease }}</td>
+          <td class="num">{{ r.cases_reported|default:"—" }}</td>
+          <td class="num">{{ r.deaths_reported|default:"—" }}</td>
+          <td class="num">{{ r.case_fatality_ratio_pct|default:"—" }}</td>
+          <td>{{ r.quality_notes }}</td></tr>
+        {% empty %}<tr><td colspan="7" class="muted">No flagged rows.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="panel">
+    <h3>Missing values (kept NULL)</h3>
+    <table>
+      <thead><tr><th>Table</th><th>Field</th><th class="num">Missing</th></tr></thead>
+      <tbody>
+        {% for m in missing %}
+        <tr><td>{{ m.table }}</td><td>{{ m.field }}</td><td class="num">{{ m.count }}</td></tr>
+        {% empty %}<tr><td colspan="3" class="muted">No missing values.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

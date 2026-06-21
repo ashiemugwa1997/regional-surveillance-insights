@@ -320,6 +320,85 @@ def recommendations() -> list[dict]:
     ]
 
 
+def map_data() -> list[dict]:
+    """Country points for the map: coordinates, SNI and tier."""
+    frame = compute_support_index().reset_index()
+    coords = {c.iso3: (c.latitude, c.longitude)
+              for c in models.Country.objects.all()}
+    out = []
+    for _, r in frame.iterrows():
+        lat, lng = coords.get(r["iso3"], (None, None))
+        if lat is None or lng is None:
+            continue
+        out.append({
+            "iso3": r["iso3"], "name": r["country_name"],
+            "lat": lat, "lng": lng,
+            "sni": round(r["support_index"], 1), "tier": r["tier"],
+            "rank": int(r["rank"]),
+        })
+    return out
+
+
+def country_detail(iso3: str):
+    """Per-year series, outbreaks and SNI row for a single country."""
+    country = models.Country.objects.filter(iso3=iso3).first()
+    if not country:
+        return None
+    years = list(range(2021, 2026))
+
+    def series(model, fields):
+        rows = {o.year: o for o in model.objects.filter(country_id=iso3)}
+        return {f: [getattr(rows[y], f) if y in rows else None for y in years]
+                for f in fields}
+
+    data = {
+        "country": country,
+        "years": years,
+        "reporting": series(models.ReportingMetric, [
+            "timeliness_pct", "completeness_pct", "idsr_weekly_compliance_pct"]),
+        "laboratory": series(models.LaboratoryCapacity, [
+            "iso15189_accreditation_pct", "avg_turnaround_time_days",
+            "diagnostic_tests_per_100k"]),
+        "workforce": series(models.Workforce, [
+            "epidemiologists_per_100k", "feltp_trained_pct",
+            "lab_technicians_per_100k"]),
+        "funding": series(models.Funding, [
+            "funding_per_capita_usd", "domestic_funding_share_pct"]),
+        "outbreaks": list(models.Outbreak.objects.filter(country_id=iso3)
+                          .order_by("-year", "start_date")),
+    }
+    data["sni"] = next((r for r in support_table() if r["iso3"] == iso3), None)
+    return data
+
+
+def data_quality_summary() -> dict:
+    """Flagged surveillance rows + missing-value counts for the data-quality page."""
+    flagged = list(models.DiseaseSurveillance.objects.filter(is_valid=False)
+                   .select_related("country")
+                   .order_by("country__country_name", "year", "disease"))
+    checks = [
+        (models.Funding, "total_funding_usd"),
+        (models.Funding, "external_funding_usd"),
+        (models.Funding, "funding_per_capita_usd"),
+        (models.Funding, "domestic_funding_share_pct"),
+        (models.Population, "total_population"),
+        (models.Population, "under5_population"),
+        (models.Population, "urban_population_pct"),
+    ]
+    missing = []
+    for model, field in checks:
+        n = model.objects.filter(**{f"{field}__isnull": True}).count()
+        if n:
+            missing.append({"table": model._meta.verbose_name,
+                            "field": field, "count": n})
+    return {
+        "flagged": flagged,
+        "flagged_count": len(flagged),
+        "total_rows": models.DiseaseSurveillance.objects.count(),
+        "missing": missing,
+    }
+
+
 # --------------------------------------------------------------------- helpers
 def _mean(values):
     vals = [v for v in values if v is not None and not pd.isna(v)]

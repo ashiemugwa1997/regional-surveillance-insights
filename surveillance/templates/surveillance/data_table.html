@@ -25,6 +25,12 @@
   <span class="muted">{{ rows|length }} row(s)</span>
 </form>
 
+<div class="controls">
+  <a href="{% url 'surveillance:export_data' 'csv' %}?year={{ sel_year }}&country={{ sel_country }}">⬇ CSV</a>
+  <a href="{% url 'surveillance:export_data' 'xlsx' %}?year={{ sel_year }}&country={{ sel_country }}">⬇ Excel</a>
+  <span class="muted">(respects the filters above)</span>
+</div>
+
 <div class="panel">
   <table id="dataTable">
     <thead>
@@ -38,7 +44,7 @@
     <tbody>
       {% for r in rows %}
       <tr>
-        <td>{{ r.country }}</td><td>{{ r.iso3 }}</td><td class="num">{{ r.year }}</td>
+        <td><a href="{% url 'surveillance:country_detail' r.iso3 %}">{{ r.country }}</a></td><td>{{ r.iso3 }}</td><td class="num">{{ r.year }}</td>
         <td class="num">{{ r.population|intcomma|default:"—" }}</td>
         <td class="num">{{ r.timeliness|default:"—" }}</td>
         <td class="num">{{ r.completeness|default:"—" }}</td>

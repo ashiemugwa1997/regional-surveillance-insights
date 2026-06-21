@@ -1,0 +1,48 @@
+{% extends "surveillance/base.html" %}
+{% block title %}Upload data{% endblock %}
+{% block content %}
+<h2>Update a dataset</h2>
+<p class="muted">Upload a file — the app <strong>auto-detects CSV or Excel</strong> from its contents. Rows that already exist (matched on their
+  natural key, e.g. country + year) are flagged and updated; new rows are added. Surveillance rows
+  are validated with the same quality checks as the main pipeline.</p>
+
+<div class="panel" style="max-width:640px">
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="controls" style="flex-direction:column; align-items:flex-start; gap:14px">
+      <label>Dataset
+        <select name="dataset" required>
+          <option value="">— choose —</option>
+          {% for key, label in datasets %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>File <input type="file" name="file" accept=".csv,.xlsx,.xls" required></label>
+      <button type="submit" style="padding:9px 18px; background:#0a3d62; color:#fff; border:none;
+        border-radius:7px; font-size:14px; cursor:pointer">Upload &amp; update</button>
+    </div>
+  </form>
+</div>
+
+{% if error %}
+<div class="panel" style="max-width:640px; margin-top:16px; border-left:4px solid #d64545">
+  <strong>Could not upload:</strong> {{ error }}
+</div>
+{% endif %}
+
+{% if report %}
+<div class="panel" style="margin-top:16px">
+  <h3>Result — {{ report.dataset }}</h3>
+  <div class="cards">
+    <div class="card"><div class="label">Rows in file</div><div class="value">{{ report.rows }}</div></div>
+    <div class="card"><div class="label">New (inserted)</div><div class="value">{{ report.created }}</div></div>
+    <div class="card"><div class="label">Existing (updated)</div><div class="value">{{ report.existing }}</div><div class="note">already in the dataset</div></div>
+    <div class="card"><div class="label">Quality-flagged</div><div class="value">{{ report.flagged }}</div></div>
+    <div class="card"><div class="label">Errors</div><div class="value">{{ report.errors|length }}</div></div>
+  </div>
+  {% if report.errors %}
+  <h4 style="margin-top:16px">Rows skipped</h4>
+  <ul class="muted">{% for e in report.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

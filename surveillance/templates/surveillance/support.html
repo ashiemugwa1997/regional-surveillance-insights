@@ -9,6 +9,11 @@
   Funding {{ weights.Funding }}. Bars show the per-domain need (0–100).
 </p>
 
+<div class="controls">
+  <a href="{% url 'surveillance:export_support' 'csv' %}">⬇ CSV</a>
+  <a href="{% url 'surveillance:export_support' 'xlsx' %}">⬇ Excel</a>
+</div>
+
 <div class="panel">
   <table id="sniTable">
     <thead>
@@ -23,7 +28,7 @@
       {% for r in rows %}
       <tr>
         <td>{{ r.rank }}</td>
-        <td><strong>{{ r.country_name }}</strong> <span class="muted">{{ r.iso3 }}</span></td>
+        <td><a href="{% url 'surveillance:country_detail' r.iso3 %}"><strong>{{ r.country_name }}</strong></a> <span class="muted">{{ r.iso3 }}</span></td>
         <td>{{ r.afro_subregion }}</td>
         <td class="num">{{ r.priority_country }}</td>
         <td class="num"><strong>{{ r.support_index }}</strong></td>

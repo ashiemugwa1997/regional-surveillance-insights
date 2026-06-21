@@ -1,0 +1,74 @@
+{% extends "surveillance/base.html" %}
+{% block title %}{{ country.country_name }}{% endblock %}
+{% block content %}
+<h2>{{ country.country_name }} <span class="muted">{{ country.iso3 }} · {{ country.afro_subregion }}</span></h2>
+
+{% if sni %}
+<div class="cards" style="margin-bottom:18px">
+  <div class="card"><div class="label">Support-Need Index</div><div class="value">{{ sni.support_index }}</div><div class="note">rank #{{ sni.rank }} of 20</div></div>
+  <div class="card"><div class="label">Tier</div><div class="value">
+    {% if sni.tier == "High need" %}<span class="pill High">High</span>
+    {% elif sni.tier == "Medium need" %}<span class="pill Medium">Medium</span>
+    {% else %}<span class="pill Low">Low</span>{% endif %}</div><div class="note">priority {{ sni.priority_country }}</div></div>
+  <div class="card"><div class="label">Reporting / Lab</div><div class="value">{{ sni.reporting }} / {{ sni.laboratory }}</div><div class="note">domain need (0–100)</div></div>
+  <div class="card"><div class="label">Workforce / Funding</div><div class="value">{{ sni.workforce }} / {{ sni.funding }}</div><div class="note">domain need (0–100)</div></div>
+</div>
+{% endif %}
+
+<div class="grid2">
+  <div class="panel"><h3>Reporting (%)</h3><canvas id="repChart" height="200"></canvas></div>
+  <div class="panel"><h3>Laboratory</h3><canvas id="labChart" height="200"></canvas></div>
+  <div class="panel"><h3>Workforce</h3><canvas id="wfChart" height="200"></canvas></div>
+  <div class="panel"><h3>Funding</h3><canvas id="fundChart" height="200"></canvas></div>
+</div>
+
+<div class="panel" style="margin-top:22px">
+  <h3>Outbreaks ({{ outbreaks|length }})</h3>
+  <table>
+    <thead><tr><th>Year</th><th>Disease</th><th>Start</th><th class="num">Detection (d)</th>
+      <th class="num">Duration (d)</th><th class="num">Cases</th><th class="num">Deaths</th></tr></thead>
+    <tbody>
+      {% for o in outbreaks %}
+      <tr><td>{{ o.year }}</td><td>{{ o.disease }}</td><td>{{ o.start_date|default:"—" }}</td>
+        <td class="num">{{ o.time_to_detection_days|default:"—" }}</td>
+        <td class="num">{{ o.duration_days|default:"—" }}</td>
+        <td class="num">{{ o.cases|default:"—" }}</td><td class="num">{{ o.deaths|default:"—" }}</td></tr>
+      {% empty %}<tr><td colspan="7" class="muted">No outbreaks recorded.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+<p style="margin-top:14px"><a href="{% url 'surveillance:support' %}">&larr; Back to ranking</a></p>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  const S = {{ series_json|safe }};
+  const mk = (id, datasets, opts={}) => new Chart(document.getElementById(id), {
+    type: 'line',
+    data: { labels: S.years.map(String), datasets },
+    options: Object.assign({ tension: .3, plugins: { legend: { position: 'bottom' } } }, opts)
+  });
+  const c = ['#1e88e5', '#2f9e69', '#e8a33d'];
+
+  mk('repChart', [
+    { label: 'Timeliness', data: S.reporting.timeliness_pct, borderColor: c[0] },
+    { label: 'Completeness', data: S.reporting.completeness_pct, borderColor: c[1] },
+    { label: 'IDSR', data: S.reporting.idsr_weekly_compliance_pct, borderColor: c[2] },
+  ]);
+  mk('labChart', [
+    { label: 'Accreditation %', data: S.laboratory.iso15189_accreditation_pct, borderColor: c[0] },
+    { label: 'Turnaround (d)', data: S.laboratory.avg_turnaround_time_days, borderColor: c[2] },
+    { label: 'Tests /100k', data: S.laboratory.diagnostic_tests_per_100k, borderColor: c[1] },
+  ]);
+  mk('wfChart', [
+    { label: 'Epi /100k', data: S.workforce.epidemiologists_per_100k, borderColor: c[0] },
+    { label: 'FETP %', data: S.workforce.feltp_trained_pct, borderColor: c[1] },
+    { label: 'Lab techs /100k', data: S.workforce.lab_technicians_per_100k, borderColor: c[2] },
+  ]);
+  mk('fundChart', [
+    { label: 'Funding/capita $', data: S.funding.funding_per_capita_usd, borderColor: c[0] },
+    { label: 'Domestic share %', data: S.funding.domestic_funding_share_pct, borderColor: c[1] },
+  ]);
+</script>
+{% endblock %}
