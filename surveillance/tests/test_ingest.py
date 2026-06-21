@@ -40,7 +40,7 @@ class IngestTests(LoadedDataTestCase):
         self.assertEqual(rep["flagged"], 1)
         row = models.DiseaseSurveillance.objects.get(
             country_id=ds.country_id, year=ds.year, disease=ds.disease)
-        self.assertFalse(row.is_valid)
+        self.assertTrue(row.under_ascertainment)
 
     def test_unknown_country_is_reported(self):
         bad = "QQQ"

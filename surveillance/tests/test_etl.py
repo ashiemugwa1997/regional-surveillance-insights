@@ -24,15 +24,17 @@ class ETLTests(LoadedDataTestCase):
             expected = len(pd.read_csv(RAW / fname))
             self.assertEqual(model.objects.count(), expected, fname)
 
-    def test_quarantine_matches_source_rules(self):
-        # The quarantined count is derived from the same rules applied to the source,
-        # not a hard-coded number.
+    def test_under_ascertainment_flagged_and_kept(self):
+        # deaths>cases / CFR>100% are flagged as under-ascertainment, derived from the
+        # same rule applied to the source — and crucially they are KEPT, not dropped.
         df = pd.read_csv(RAW / "disease_surveillance.csv")
         expected = int(((df["case_fatality_ratio_pct"] > 100) |
                         (df["deaths_reported"] > df["cases_reported"])).sum())
-        flagged = models.DiseaseSurveillance.objects.filter(is_valid=False)
+        flagged = models.DiseaseSurveillance.objects.filter(under_ascertainment=True)
         self.assertEqual(flagged.count(), expected)
         self.assertEqual(flagged.filter(quality_notes="").count(), 0)
+        # every source row is still present (nothing quarantined out)
+        self.assertEqual(models.DiseaseSurveillance.objects.count(), len(df))
 
     def test_missing_values_kept_null(self):
         df = pd.read_csv(RAW / "funding.csv")

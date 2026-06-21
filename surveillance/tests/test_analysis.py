@@ -33,4 +33,5 @@ class AnalysisTests(LoadedDataTestCase):
         self.assertEqual(s["total_surveillance_rows"],
                          models.DiseaseSurveillance.objects.count())
         self.assertEqual(s["flagged_rows"],
-                         models.DiseaseSurveillance.objects.filter(is_valid=False).count())
+                         models.DiseaseSurveillance.objects.filter(
+                             under_ascertainment=True).count())
