@@ -1,0 +1,7 @@
+# Top-level runtime dependencies. The pinned, hashed lock file (requirements.txt)
+# is generated from this with:  pip-compile --generate-hashes
+Django==5.1.4
+mysqlclient==2.2.6
+pandas==2.2.3
+whitenoise==6.8.2
+gunicorn==23.0.0

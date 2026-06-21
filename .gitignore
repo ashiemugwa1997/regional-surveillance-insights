@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Django
+*.log
+db.sqlite3
+/staticfiles/
+.env
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# slide render artefacts
+slides/preview/
+
+# Local-only: personal notes and presentation materials (not for the public repo)
+README.local.md
+SESSION_NOTES.md
+slides/
+docs/talking_points.md
+docs/pdf/talking_points.pdf
+docs/pdf/session_notes.pdf

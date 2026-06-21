@@ -1,0 +1,35 @@
+services:
+  db:
+    image: mysql:8.4@sha256:563602a18ffd5be220968e8508d84c9dcd80fbffe69e28af51572db29e3285b2
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpw}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-surveillance}
+      MYSQL_USER: ${MYSQL_USER:-surveillance}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-surveillance}
+    ports:
+      - "3307:3306"          # host 3307 to avoid clashing with a local MySQL
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpw}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  web:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DJANGO_DEBUG: "True"
+      MYSQL_HOST: db
+      MYSQL_PORT: "3306"
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-surveillance}
+      MYSQL_USER: ${MYSQL_USER:-surveillance}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-surveillance}
+    ports:
+      - "8000:8000"
+
+volumes:
+  db_data:
