@@ -1,38 +1,59 @@
 {% extends "surveillance/base.html" %}
+{% load static %}
 {% block title %}Map{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<style>#map { height: 70vh; border-radius: 10px; } .legend { background:#fff; padding:8px 10px;
-  border-radius:8px; font-size:12px; box-shadow:0 1px 3px rgba(0,0,0,.2); line-height:1.6; }
-  .legend i { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:6px; }</style>
+<style>
+  #map { height: 72vh; border-radius: 10px; background: #eaf2f8; }
+  .legend { background:#fff; padding:8px 10px; border-radius:8px; font-size:12px;
+    box-shadow:0 1px 3px rgba(0,0,0,.2); line-height:1.6; }
+  .legend i { display:inline-block; width:12px; height:12px; border-radius:3px; margin-right:6px; }
+</style>
 {% endblock %}
 {% block content %}
 <h2>Support-Need map</h2>
-<p class="muted">Each country is plotted by its coordinates and coloured by support-need tier.
-  Click a marker for its Support-Need Index and rank.</p>
+<p class="muted">Countries shaded by support-need tier (self-contained — no external map tiles).
+  Click a country for its Support-Need Index and rank.</p>
 <div class="panel"><div id="map"></div></div>
 {% endblock %}
 {% block scripts %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-  const points = {{ points|safe }};
+  const data = {{ points|safe }};
+  const byIso = {};
+  data.forEach(d => byIso[d.iso3] = d);
   const colour = t => t === 'High need' ? '#d64545' : t === 'Medium need' ? '#e8a33d' : '#2f9e69';
 
-  const map = L.map('map').setView([2, 18], 3);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap', maxZoom: 7
-  }).addTo(map);
+  const map = L.map('map', { attributionControl: false });
 
-  points.forEach(p => {
-    L.circleMarker([p.lat, p.lng], {
-      radius: 9, color: '#fff', weight: 1.5, fillColor: colour(p.tier), fillOpacity: 0.9
-    }).addTo(map).bindPopup(
-      `<strong>${p.name}</strong> (${p.iso3})<br>` +
-      `SNI: <strong>${p.sni}</strong> · rank #${p.rank}<br>` +
-      `Tier: ${p.tier}<br>` +
-      `<a href="/country/${p.iso3}/">View country &rarr;</a>`
-    );
-  });
+  fetch("{% static 'surveillance/africa.geo.json' %}")
+    .then(r => r.json())
+    .then(gj => {
+      const layer = L.geoJSON(gj, {
+        style: f => {
+          const d = byIso[f.id];
+          return d
+            ? { fillColor: colour(d.tier), fillOpacity: .85, color: '#fff', weight: 1 }
+            : { fillColor: '#dfe6ee', fillOpacity: .5, color: '#cdd6df', weight: .5 };
+        },
+        onEachFeature: (f, lyr) => {
+          const d = byIso[f.id];
+          if (d) {
+            lyr.bindPopup(
+              `<strong>${d.name}</strong> (${d.iso3})<br>` +
+              `SNI: <strong>${d.sni}</strong> · rank #${d.rank}<br>Tier: ${d.tier}<br>` +
+              `<a href="/country/${d.iso3}/">View country &rarr;</a>`);
+            lyr.on('mouseover', () => lyr.setStyle({ weight: 2.5 }));
+            lyr.on('mouseout', () => lyr.setStyle({ weight: 1 }));
+          }
+        }
+      }).addTo(map);
+
+      // Fit to our 20 countries only.
+      const ours = L.geoJSON({ type: 'FeatureCollection',
+        features: gj.features.filter(f => byIso[f.id]) });
+      map.fitBounds(ours.getBounds(), { padding: [20, 20] });
+    });
 
   const legend = L.control({ position: 'bottomright' });
   legend.onAdd = () => {
