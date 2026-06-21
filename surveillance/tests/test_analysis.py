@@ -27,6 +27,13 @@ class AnalysisTests(LoadedDataTestCase):
         self.assertTrue(high and low)
         self.assertGreaterEqual(min(high), max(low))
 
+    def test_under_ascertainment_feeds_index(self):
+        # The flag must influence the score, not just be informational.
+        frame = analysis.compute_support_index()
+        self.assertIn("under_ascertainment_rate", frame.columns)
+        self.assertIn("n__under_ascertainment_rate", frame.columns)  # normalised input
+        self.assertGreater(frame["under_ascertainment_rate"].max(), 0)
+
     def test_summary_matches_db(self):
         s = analysis.summary_indicators()
         self.assertEqual(s["n_countries"], models.Country.objects.count())
