@@ -1,0 +1,70 @@
+{% extends "surveillance/base.html" %}
+{% load humanize %}
+{% block content %}
+<h2>Regional summary — 2025</h2>
+
+<div class="cards">
+  <div class="card"><div class="label">Countries</div><div class="value">{{ summary.n_countries }}</div><div class="note">{{ summary.years }}</div></div>
+  <div class="card"><div class="label">Population covered</div><div class="value">{{ summary.total_population|intword }}</div><div class="note">latest year</div></div>
+  <div class="card"><div class="label">Outbreaks (5 yrs)</div><div class="value">{{ summary.total_outbreaks|intcomma }}</div><div class="note">event-level records</div></div>
+  <div class="card"><div class="label">Avg time to detect</div><div class="value">{{ summary.avg_detection_days }}d</div><div class="note">across all outbreaks</div></div>
+  <div class="card"><div class="label">Reporting timeliness</div><div class="value">{{ summary.avg_timeliness }}%</div><div class="note">completeness {{ summary.avg_completeness }}%</div></div>
+  <div class="card"><div class="label">Epidemiologists /100k</div><div class="value">{{ summary.avg_epi_per_100k }}</div><div class="note">IHR target ≥ 1.0</div></div>
+  <div class="card"><div class="label">Labs ISO 15189</div><div class="value">{{ summary.avg_lab_accreditation }}%</div><div class="note">accredited (avg)</div></div>
+  <div class="card"><div class="label">Total funding</div><div class="value">${{ summary.total_funding_usd|intword }}</div><div class="note">{{ summary.avg_domestic_share }}% domestic</div></div>
+  <div class="card"><div class="label">Data quality</div><div class="value">{{ summary.flagged_rows }}</div><div class="note">of {{ summary.total_surveillance_rows }} rows quarantined</div></div>
+</div>
+
+<div class="grid2">
+  <div class="panel"><h3>Top 10 countries by Support-Need Index</h3><canvas id="sniChart" height="220"></canvas></div>
+  <div class="panel"><h3>Outbreaks detected per year</h3><canvas id="obChart" height="220"></canvas></div>
+  <div class="panel"><h3>Reporting performance trend (region average)</h3><canvas id="trendChart" height="220"></canvas></div>
+  <div class="panel"><h3>Domestic funding share by country — 2025</h3><canvas id="fundChart" height="220"></canvas></div>
+</div>
+
+<div class="panel" style="margin-top:22px">
+  <h3>Recommendations for the next biennium</h3>
+  {% for r in recommendations %}
+  <div class="rec">
+    <h4>{{ forloop.counter }}. {{ r.title }}</h4>
+    <p>{{ r.rationale }}</p>
+    <p><strong>Action:</strong> {{ r.action }}</p>
+    <p class="metric">Key metric: {{ r.metric }}</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  const D = {{ charts|safe }};
+  const blue = '#1e88e5', navy = '#0a3d62', green = '#2f9e69', amber = '#e8a33d';
+
+  new Chart(document.getElementById('sniChart'), {
+    type: 'bar',
+    data: { labels: D.top_sni.labels, datasets: [{ label: 'Support-Need Index', data: D.top_sni.data, backgroundColor: navy }] },
+    options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { max: 100 } } }
+  });
+
+  new Chart(document.getElementById('obChart'), {
+    type: 'bar',
+    data: { labels: D.outbreaks_year.labels, datasets: [{ label: 'Outbreaks', data: D.outbreaks_year.data, backgroundColor: blue }] },
+    options: { plugins: { legend: { display: false } } }
+  });
+
+  new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: { labels: D.reporting_trend.labels, datasets: [
+      { label: 'Timeliness %', data: D.reporting_trend.timeliness, borderColor: blue, tension: .3 },
+      { label: 'Completeness %', data: D.reporting_trend.completeness, borderColor: green, tension: .3 } ] },
+    options: { scales: { y: { suggestedMin: 60, suggestedMax: 100 } } }
+  });
+
+  new Chart(document.getElementById('fundChart'), {
+    type: 'bar',
+    data: { labels: D.funding_mix.labels, datasets: [{ label: 'Domestic share %', data: D.funding_mix.domestic, backgroundColor: amber }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { max: 100 } } }
+  });
+</script>
+{% endblock %}

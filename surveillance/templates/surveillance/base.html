@@ -1,0 +1,74 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Regional Surveillance Insights{% endblock %}</title>
+  <style>
+    :root {
+      --primary: #0a3d62; --accent: #1e88e5; --bg: #f4f6f9;
+      --card: #ffffff; --text: #1f2d3d; --muted: #7b8794;
+      --high: #d64545; --med: #e8a33d; --low: #2f9e69; --line: #e3e8ee;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+           background: var(--bg); color: var(--text); }
+    header { background: var(--primary); color: #fff; padding: 14px 28px;
+             display: flex; align-items: center; justify-content: space-between; }
+    header h1 { font-size: 18px; margin: 0; font-weight: 600; }
+    header .sub { font-size: 12px; opacity: .8; }
+    nav a { color: #cfe0f1; text-decoration: none; margin-left: 22px; font-size: 14px; }
+    nav a:hover, nav a.active { color: #fff; border-bottom: 2px solid var(--accent); padding-bottom: 4px; }
+    main { padding: 26px 28px; max-width: 1280px; margin: 0 auto; }
+    h2 { font-size: 20px; margin: 4px 0 18px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+            padding: 16px 18px; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
+    .card .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+    .card .value { font-size: 26px; font-weight: 700; margin-top: 6px; color: var(--primary); }
+    .card .note { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 22px; }
+    @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+    .panel { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 18px; }
+    .panel h3 { margin: 0 0 12px; font-size: 15px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+    th { background: #f0f3f7; cursor: pointer; user-select: none; white-space: nowrap; }
+    td.num, th.num { text-align: right; }
+    tr:hover td { background: #f7fafc; }
+    .pill { padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; }
+    .pill.High { background: var(--high); } .pill.Medium { background: var(--med); }
+    .pill.Low { background: var(--low); }
+    .bar { height: 8px; border-radius: 4px; background: #e7edf3; position: relative; min-width: 80px; }
+    .bar > span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--accent); }
+    .controls { margin-bottom: 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    select, input[type=search] { padding: 7px 10px; border: 1px solid var(--line); border-radius: 7px; font-size: 13px; }
+    .rec { border-left: 4px solid var(--accent); padding: 6px 14px; margin-bottom: 14px; }
+    .rec h4 { margin: 0 0 4px; font-size: 15px; }
+    .rec p { margin: 4px 0; font-size: 13px; color: #45525f; }
+    .rec .metric { font-size: 12px; color: var(--primary); font-weight: 600; }
+    .muted { color: var(--muted); }
+    footer { text-align: center; color: var(--muted); font-size: 12px; padding: 20px; }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Regional Surveillance Insights</h1>
+      <div class="sub">Biennium planning dashboard · 20 countries · 2021–2025</div>
+    </div>
+    <nav>
+      <a href="{% url 'surveillance:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">Dashboard</a>
+      <a href="{% url 'surveillance:support' %}" class="{% if request.resolver_match.url_name == 'support' %}active{% endif %}">Countries Needing Support</a>
+      <a href="{% url 'surveillance:data_table' %}" class="{% if request.resolver_match.url_name == 'data_table' %}active{% endif %}">Data Table</a>
+    </nav>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  <footer>Synthetic dataset · Support-Need Index methodology documented in the README.</footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

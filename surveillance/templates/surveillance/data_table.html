@@ -1,0 +1,85 @@
+{% extends "surveillance/base.html" %}
+{% load humanize %}
+{% block title %}Data Table{% endblock %}
+{% block content %}
+<h2>Country-year data table</h2>
+
+<form method="get" class="controls">
+  <label>Year:
+    <select name="year" onchange="this.form.submit()">
+      <option value="">All</option>
+      {% for y in years %}
+        <option value="{{ y }}" {% if sel_year == y|stringformat:'s' %}selected{% endif %}>{{ y }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Country:
+    <select name="country" onchange="this.form.submit()">
+      <option value="">All</option>
+      {% for c in countries %}
+        <option value="{{ c.iso3 }}" {% if sel_country == c.iso3 %}selected{% endif %}>{{ c.country_name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <input type="search" id="tableSearch" placeholder="Search table…" onkeyup="filterTable()">
+  <span class="muted">{{ rows|length }} row(s)</span>
+</form>
+
+<div class="panel">
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>Country</th><th>ISO3</th><th class="num">Year</th><th class="num">Population</th>
+        <th class="num">Timeliness %</th><th class="num">Completeness %</th><th class="num">IDSR %</th>
+        <th class="num">Lab accred %</th><th class="num">Turnaround d</th>
+        <th class="num">Epi /100k</th><th class="num">Funding/cap $</th><th class="num">Domestic %</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{{ r.country }}</td><td>{{ r.iso3 }}</td><td class="num">{{ r.year }}</td>
+        <td class="num">{{ r.population|intcomma|default:"—" }}</td>
+        <td class="num">{{ r.timeliness|default:"—" }}</td>
+        <td class="num">{{ r.completeness|default:"—" }}</td>
+        <td class="num">{{ r.idsr|default:"—" }}</td>
+        <td class="num">{{ r.lab_accred|default:"—" }}</td>
+        <td class="num">{{ r.turnaround|default:"—" }}</td>
+        <td class="num">{{ r.epi_100k|default:"—" }}</td>
+        <td class="num">{{ r.funding_pc|default:"—" }}</td>
+        <td class="num">{{ r.dom_share|default:"—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Client-side free-text filter over the rendered rows.
+  function filterTable() {
+    const q = document.getElementById('tableSearch').value.toLowerCase();
+    document.querySelectorAll('#dataTable tbody tr').forEach(tr => {
+      tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  }
+
+  // Simple click-to-sort on any column header.
+  document.querySelectorAll('#dataTable th').forEach((th, idx) => {
+    th.addEventListener('click', () => {
+      const tbody = th.closest('table').querySelector('tbody');
+      const rows = Array.from(tbody.rows);
+      const asc = !(th.dataset.asc === 'true');
+      th.dataset.asc = asc;
+      rows.sort((a, b) => {
+        const x = a.cells[idx].textContent.trim(), y = b.cells[idx].textContent.trim();
+        const nx = parseFloat(x.replace(/,/g, '')), ny = parseFloat(y.replace(/,/g, ''));
+        if (!isNaN(nx) && !isNaN(ny)) return asc ? nx - ny : ny - nx;
+        return asc ? x.localeCompare(y) : y.localeCompare(x);
+      });
+      rows.forEach(r => tbody.appendChild(r));
+    });
+  });
+</script>
+{% endblock %}

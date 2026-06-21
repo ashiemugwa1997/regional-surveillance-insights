@@ -1,0 +1,43 @@
+{% extends "surveillance/base.html" %}
+{% block title %}Countries Needing Support{% endblock %}
+{% block content %}
+<h2>Countries requiring increased support</h2>
+<p class="muted">
+  Ranked by the Support-Need Index (0–100, higher = greater need). Domain weights:
+  Reporting {{ weights.Reporting }}, Laboratory {{ weights.Laboratory }},
+  Workforce {{ weights.Workforce }}, Outbreaks {{ weights.Outbreaks }},
+  Funding {{ weights.Funding }}. Bars show the per-domain need (0–100).
+</p>
+
+<div class="panel">
+  <table id="sniTable">
+    <thead>
+      <tr>
+        <th>#</th><th>Country</th><th>Subregion</th><th class="num">Priority</th>
+        <th class="num">SNI</th><th>Tier</th>
+        <th class="num">Reporting</th><th class="num">Laboratory</th>
+        <th class="num">Workforce</th><th class="num">Outbreaks</th><th class="num">Funding</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{{ r.rank }}</td>
+        <td><strong>{{ r.country_name }}</strong> <span class="muted">{{ r.iso3 }}</span></td>
+        <td>{{ r.afro_subregion }}</td>
+        <td class="num">{{ r.priority_country }}</td>
+        <td class="num"><strong>{{ r.support_index }}</strong></td>
+        <td>{% if r.tier == "High need" %}<span class="pill High">High</span>
+            {% elif r.tier == "Medium need" %}<span class="pill Medium">Medium</span>
+            {% else %}<span class="pill Low">Low</span>{% endif %}</td>
+        <td class="num">{{ r.reporting }}</td>
+        <td class="num">{{ r.laboratory }}</td>
+        <td class="num">{{ r.workforce }}</td>
+        <td class="num">{{ r.outbreaks }}</td>
+        <td class="num">{{ r.funding }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
