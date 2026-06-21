@@ -1,0 +1,21 @@
+iso3,country_name,afro_subregion,latitude,longitude,priority_country
+NGA,Nigeria,West,9.082,8.6753,2
+GHA,Ghana,West,7.9465,-1.0232,1
+SEN,Senegal,West,14.4974,-14.4524,1
+CIV,Cote d'Ivoire,West,7.54,-5.5471,2
+MLI,Mali,West,17.5707,-3.9962,3
+BFA,Burkina Faso,West,12.2383,-1.5616,3
+NER,Niger,West,17.6078,8.0817,3
+COD,Democratic Republic of Congo,Central,-4.0383,21.7587,3
+CMR,Cameroon,Central,7.3697,12.3547,2
+CAF,Central African Republic,Central,6.6111,20.9394,3
+TCD,Chad,Central,15.4542,18.7322,3
+KEN,Kenya,East,-0.0236,37.9062,1
+UGA,Uganda,East,1.3733,32.2903,2
+TZA,Tanzania,East,-6.369,34.8888,2
+ETH,Ethiopia,East,9.145,40.4897,2
+RWA,Rwanda,East,-1.9403,29.8739,1
+ZAF,South Africa,Southern,-30.5595,22.9375,1
+ZMB,Zambia,Southern,-13.1339,27.8493,2
+ZWE,Zimbabwe,Southern,-19.0154,29.1549,2
+MOZ,Mozambique,Southern,-18.6657,35.5296,3
