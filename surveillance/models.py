@@ -52,8 +52,11 @@ class DiseaseSurveillance(TimeSeriesBase):
     attack_rate_per_100k = models.FloatField(null=True, blank=True)
     case_fatality_ratio_pct = models.FloatField(null=True, blank=True)
 
-    # Data-quality quarantine fields.
-    is_valid = models.BooleanField(default=True, db_index=True)
+    # Under-ascertainment marker. deaths>cases / CFR>100% are NOT treated as errors:
+    # they typically mean a death was recorded without the case being registered.
+    # Such rows are kept and counted in all indicators (CFR is capped at 100% when
+    # averaged); this flag just lets us surface them transparently.
+    under_ascertainment = models.BooleanField(default=False, db_index=True)
     quality_notes = models.CharField(max_length=255, blank=True, default="")
 
     class Meta:

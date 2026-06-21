@@ -1,6 +1,7 @@
 # Support-Need Index (SNI): ~14 indicators across 5 domains, min-max normalised so
 # higher always means greater need, averaged per domain then weighted into a 0-100
-# score. Only valid surveillance rows feed it; missing values are skipped, not imputed.
+# score. All surveillance rows feed it (CFR capped at 100% so under-ascertainment rows
+# count without distorting the average); missing values are skipped, not imputed.
 # Methodology written up in full in the README.
 
 from __future__ import annotations
@@ -31,7 +32,7 @@ INDICATORS = [
     ("Workforce", "lab_technicians_per_100k", "invert"),
     ("Outbreaks", "avg_detection_days", "direct"),
     ("Outbreaks", "outbreaks_per_year", "direct"),
-    ("Outbreaks", "mean_cfr_valid", "direct"),
+    ("Outbreaks", "mean_cfr", "direct"),
     ("Funding", "funding_per_capita_usd", "invert"),
     ("Funding", "domestic_funding_share_pct", "invert"),
 ]
@@ -86,15 +87,16 @@ def build_indicator_frame() -> pd.DataFrame:
     else:
         ob_agg = pd.DataFrame(columns=["avg_detection_days", "outbreaks_per_year"])
 
-    # Mean case-fatality ratio from VALID surveillance rows only (recent window).
-    dis = _df(models.DiseaseSurveillance.objects.filter(
-        is_valid=True, year__in=RECENT_WINDOW),
-        ["country_id", "case_fatality_ratio_pct"])
+    # Mean case-fatality ratio over the recent window. All rows are included;
+    # CFR is capped at 100% so under-ascertainment rows (deaths>cases) count
+    # without pushing the average above a possible value.
+    dis = _df(models.DiseaseSurveillance.objects.filter(year__in=RECENT_WINDOW),
+              ["country_id", "case_fatality_ratio_pct"])
     if not dis.empty:
-        dis_agg = dis.groupby("country_id").agg(
-            mean_cfr_valid=("case_fatality_ratio_pct", "mean"))
+        dis["cfr_capped"] = dis["case_fatality_ratio_pct"].clip(upper=100)
+        dis_agg = dis.groupby("country_id").agg(mean_cfr=("cfr_capped", "mean"))
     else:
-        dis_agg = pd.DataFrame(columns=["mean_cfr_valid"])
+        dis_agg = pd.DataFrame(columns=["mean_cfr"])
 
     frame = base.join([rep, lab, wf, fund, pop, ob_agg, dis_agg])
     return frame
@@ -198,7 +200,7 @@ def summary_indicators() -> dict:
     ob = models.Outbreak.objects.all()
     detection = _mean([o.time_to_detection_days for o in ob])
 
-    flagged = models.DiseaseSurveillance.objects.filter(is_valid=False).count()
+    flagged = models.DiseaseSurveillance.objects.filter(under_ascertainment=True).count()
     total_dis = models.DiseaseSurveillance.objects.count()
 
     return {
@@ -373,7 +375,7 @@ def country_detail(iso3: str):
 
 def data_quality_summary() -> dict:
     """Flagged surveillance rows + missing-value counts for the data-quality page."""
-    flagged = list(models.DiseaseSurveillance.objects.filter(is_valid=False)
+    flagged = list(models.DiseaseSurveillance.objects.filter(under_ascertainment=True)
                    .select_related("country")
                    .order_by("country__country_name", "year", "disease"))
     checks = [

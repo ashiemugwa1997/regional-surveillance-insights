@@ -2,18 +2,20 @@
 {% block title %}Data Quality{% endblock %}
 {% block content %}
 <h2>Data quality</h2>
-<p class="muted">Policy: <strong>flag and quarantine, never fabricate</strong>. Invalid rows are
-  loaded but excluded from indicators; missing values are kept as NULL, not imputed.</p>
+<p class="muted">Policy: <strong>flag, never fabricate or drop</strong>. Rows where deaths exceed
+  recorded cases (or CFR&nbsp;&gt;&nbsp;100%) are <strong>case under-ascertainment</strong> — a death
+  recorded without a registered case — not errors. They are kept and counted; CFR is capped at
+  100% when averaging. Missing values are kept as NULL, never imputed.</p>
 
 <div class="cards" style="margin-bottom:20px">
   <div class="card"><div class="label">Surveillance rows</div><div class="value">{{ total_rows }}</div></div>
-  <div class="card"><div class="label">Quarantined</div><div class="value">{{ flagged_count }}</div><div class="note">impossible / contradictory</div></div>
+  <div class="card"><div class="label">Under-ascertainment</div><div class="value">{{ flagged_count }}</div><div class="note">deaths&gt;cases / CFR&gt;100% — kept &amp; flagged</div></div>
   <div class="card"><div class="label">Columns with gaps</div><div class="value">{{ missing|length }}</div><div class="note">missing values kept NULL</div></div>
 </div>
 
 <div class="grid2">
   <div class="panel">
-    <h3>Quarantined surveillance rows</h3>
+    <h3>Under-ascertainment rows (kept &amp; flagged)</h3>
     <table>
       <thead><tr><th>Country</th><th>Year</th><th>Disease</th><th class="num">Cases</th>
         <th class="num">Deaths</th><th class="num">CFR %</th><th>Reason</th></tr></thead>

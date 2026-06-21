@@ -17,9 +17,9 @@ class CountryAdmin(admin.ModelAdmin):
 class DiseaseSurveillanceAdmin(admin.ModelAdmin):
     list_display = (
         "country", "year", "disease", "cases_reported", "deaths_reported",
-        "case_fatality_ratio_pct", "is_valid",
+        "case_fatality_ratio_pct", "under_ascertainment",
     )
-    list_filter = ("is_valid", "disease", "year")
+    list_filter = ("under_ascertainment", "disease", "year")
     search_fields = ("country__country_name",)
 
 

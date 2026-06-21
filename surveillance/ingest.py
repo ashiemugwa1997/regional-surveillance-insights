@@ -108,15 +108,15 @@ def read_table(uploaded_file):
 
 
 def _quality_flags(defaults):
-    """Apply the same CFR>100 / deaths>cases checks the ETL uses."""
+    """Flag under-ascertainment (deaths>cases / CFR>100%) — kept, not dropped."""
     notes = []
     cfr = defaults.get("case_fatality_ratio_pct")
     cases, deaths = defaults.get("cases_reported"), defaults.get("deaths_reported")
     if cfr is not None and cfr > 100:
-        notes.append("CFR>100 (impossible)")
+        notes.append("CFR>100% (under-ascertainment)")
     if cases is not None and deaths is not None and deaths > cases:
-        notes.append("deaths>cases (contradictory)")
-    defaults["is_valid"] = not notes
+        notes.append("deaths>cases (under-ascertainment)")
+    defaults["under_ascertainment"] = bool(notes)
     defaults["quality_notes"] = "; ".join(notes)
     return bool(notes)
 

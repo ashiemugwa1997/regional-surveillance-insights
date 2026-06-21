@@ -13,7 +13,7 @@
   <div class="card"><div class="label">Epidemiologists /100k</div><div class="value">{{ summary.avg_epi_per_100k }}</div><div class="note">IHR target ≥ 1.0</div></div>
   <div class="card"><div class="label">Labs ISO 15189</div><div class="value">{{ summary.avg_lab_accreditation }}%</div><div class="note">accredited (avg)</div></div>
   <div class="card"><div class="label">Total funding</div><div class="value">${{ summary.total_funding_usd|intword }}</div><div class="note">{{ summary.avg_domestic_share }}% domestic</div></div>
-  <div class="card"><div class="label">Data quality</div><div class="value">{{ summary.flagged_rows }}</div><div class="note">of {{ summary.total_surveillance_rows }} rows quarantined</div></div>
+  <div class="card"><div class="label">Data quality</div><div class="value">{{ summary.flagged_rows }}</div><div class="note">of {{ summary.total_surveillance_rows }} rows flagged (under-ascertainment)</div></div>
 </div>
 
 <div class="grid2">

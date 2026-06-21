@@ -122,13 +122,16 @@ class Command(BaseCommand):
             deaths = as_int(r.deaths_reported)
             cfr = as_float(r.case_fatality_ratio_pct)
 
+            # deaths>cases / CFR>100% are kept and counted: they signal case
+            # under-ascertainment (a death recorded without a registered case),
+            # not a data error. We just flag them for transparency.
             notes = []
             if cfr is not None and cfr > 100:
-                notes.append("CFR>100 (impossible)")
+                notes.append("CFR>100% (under-ascertainment)")
             if cases is not None and deaths is not None and deaths > cases:
-                notes.append("deaths>cases (contradictory)")
-            is_valid = not notes
-            if not is_valid:
+                notes.append("deaths>cases (under-ascertainment)")
+            under = bool(notes)
+            if under:
                 flagged += 1
 
             objs.append(models.DiseaseSurveillance(
@@ -136,12 +139,12 @@ class Command(BaseCommand):
                 cases_reported=cases, deaths_reported=deaths,
                 attack_rate_per_100k=as_float(r.attack_rate_per_100k),
                 case_fatality_ratio_pct=cfr,
-                is_valid=is_valid, quality_notes="; ".join(notes),
+                under_ascertainment=under, quality_notes="; ".join(notes),
             ))
         models.DiseaseSurveillance.objects.bulk_create(objs)
         self._ok("disease_surveillance", len(objs))
         self.stdout.write(self.style.WARNING(
-            f"    -> flagged {flagged} invalid rows (quarantined, not dropped)"
+            f"    -> flagged {flagged} under-ascertainment rows (kept, CFR capped in averages)"
         ))
 
     def _load_outbreaks(self, d: Path):
@@ -236,7 +239,7 @@ class Command(BaseCommand):
             ("funding", models.Funding),
         ]:
             self._ok(label, model.objects.count())
-        invalid = models.DiseaseSurveillance.objects.filter(is_valid=False).count()
+        flagged = models.DiseaseSurveillance.objects.filter(under_ascertainment=True).count()
         self.stdout.write(self.style.WARNING(
-            f"  quarantined surveillance rows: {invalid}"
+            f"  under-ascertainment rows flagged: {flagged}"
         ))
